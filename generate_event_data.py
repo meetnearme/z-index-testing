@@ -19,10 +19,15 @@ def generate_events(num_events):
         lat = random.uniform(city_lats[city][0], city_lats[city][1])
 
         # Randomly generate start date within the past year 
-        start = fake.date_time_between(start_date='-1y', end_date='now')
+        # start = fake.date_time_between(start_date='-1y', end_date='now')
 
         # Randomly choose event duration between 1 to 8 hours
-        duration = random.randint(1, 8)
+        # duration = random.randint(1, 8)
+        # end = start + timedelta(hours=duration)
+
+        # set fixed start date and duration
+        start = datetime(2024, 6, 1, 12, 0, 0)
+        duration = 3
         end = start + timedelta(hours=duration)
 
         # Generate a random UUID
