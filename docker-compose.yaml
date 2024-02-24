@@ -1,0 +1,39 @@
+version: '3.8'
+services:
+  dynamodb-local:
+    command: "-jar DynamoDBLocal.jar -inMemory -sharedDb"
+    user: root
+    image: "amazon/dynamodb-local:latest"
+    container_name: dynamodb-local-z-index
+    ports:
+      - "8000:8000"
+    volumes:
+      - "./docker/dynamodb:/home/dynamodblocal/data"
+    working_dir: /home/dynamodblocal
+    networks:
+      - backend
+  dynamo-seeder:
+    working_dir: /home/api/seeder/
+    volumes:
+      - ./:/home/api/seeder
+    entrypoint: ["/bin/bash"]
+    command: -c "chmod +x ./init_database.sh && ./init_database.sh --forever"
+    image: amazon/aws-cli
+    links:
+      - dynamodb-local
+    depends_on:
+      - dynamodb-local
+    environment:
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - REGION=us-east-1
+      - DYNAMODB_ENDPOINT=http://dynamodb-local:8000
+    networks:
+      - backend
+
+
+
+networks:
+  backend:
+    name: aws_backend
+    driver: bridge
