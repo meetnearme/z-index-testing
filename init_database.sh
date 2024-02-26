@@ -20,29 +20,91 @@ export AWS_REGION="us-east-1"
 
 # echo "database seed complete"
 
+echo "Start creating database tables"
 
-
-
-# install Python packages 
-pip3 install faker uuid
 
 # Create Dynamodb table
-aws dynamodb create-table \ 
-    --table-name EventsTable \ 
+aws dynamodb create-table \
+    --table-name EventsTable \
     --attribute-definitions \
-        AttributeName=EventType,AttributeType=S \ 
-        AttributeName=ZOrderIndex,AttributeType=B \ 
-    --key-schema \ 
-        AttributeName=EventType,KeyType=HASH \ 
-        AttributeName=ZOrderIndex,KeyType=RANGE \ 
-    --provisioned-throughput \ 
-        ReadCapacityUnits=5,WriteCapacityUnits=5 \ 
-    --endpoint-url http://dynamodb-local:8000 \ 
+        AttributeName=EventType,AttributeType=S \
+        AttributeName=ZOrderIndex,AttributeType=B \
+    --key-schema \
+        AttributeName=EventType,KeyType=HASH \
+        AttributeName=ZOrderIndex,KeyType=RANGE \
+    --provisioned-throughput \
+        ReadCapacityUnits=5,WriteCapacityUnits=5 \
+    --endpoint-url http://dynamodb-local:8000 \
     --region $AWS_REGION
 
+echo "Dynamodb table created"
+
+# Generate mock event data using Python script
+events=$(python3 ./generate_event_data.py)
+
+# first_event=$(echo "$events" | head -n 1)
+# first_event=${events[0]}
+
+while IFS= read -r event || [ -n "$event"]; do 
+    
+    # extract event attributes
+    city=$(echo $event | jq -r '.city')
+    name=$(echo $event | jq -r '.name')
+    description=$(echo $event | jq -r '.description')
+    start=$(echo $event | jq -r '.start')
+    end=$(echo $event | jq -r '.end')
+    lon=$(echo $event | jq -r '.lon')
+    lat=$(echo $event | jq -r '.lat')
+    uuid=$(echo $event | jq -r '.uuid')
+    z_order_index=$(echo $event | jq -r '.z_order_index')
 
 
+    jq_filter=$(cat << "EOF"
+{
+    "Item": {
+        "EventType": {"S": $event_type},
+        "ZOrderIndex": {"B": ($z_order_index|@base64)},
+        "Name": {"S": $name},
+        "Description": {"S": $description},
+        "StartTime": {"S": $start},
+        "EndTime": {"S": "$end"},
+        "Longitude": {"N": $lon},
+        "Latitude": {"N": $lat},
+        "UUID": {"S": $uuid}
+    }
+}
+EOF
+)
 
+    item_json=$(jq -n \
+        --arg event_type "MeetNearMeEvent" \
+        --arg z_order_index "$z_order_index" \
+        --arg name "$name" \
+        --arg description "$description" \
+        --arg start "$start" \
+        --arg end "$end" \
+        --arg lon "$lon" \
+        --arg lat "$lat" \
+        --arg uuid "$uuid" \
+        "$jq_filter"
+    )
+
+    aws dynamodb put-item \
+        --table-name EventsTable \
+        --cli-input-json "$item_json" \
+        --endpoint-url http://dynamodb-local:8000 \
+        --region $AWS_REGION
+    
+    echo "Event inserted"
+
+done < events.json
+
+echo "Mock evenht data inserted into DynamoDB table" 
+
+aws dynamodb scan --table-name EventsTable --endpoint-url http://dynamodb-local:8000 --region $AWS_REGION
+
+
+echo "Database seed complete"
 
 if [ $1 == "--forever" ]
 then
