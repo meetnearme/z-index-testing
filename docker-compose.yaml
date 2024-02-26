@@ -13,12 +13,15 @@ services:
     networks:
       - backend
   dynamo-seeder:
+    image: "python:3.13-rc-bookworm"
     working_dir: /home/api/seeder/
     volumes:
       - ./:/home/api/seeder
     entrypoint: ["/bin/bash"]
-    command: -c "chmod +x ./init_database.sh && ./init_database.sh --forever"
-    image: amazon/aws-cli
+    command: -c "chmod +x ./dynamodb_seeder_setup.sh 
+      && ./dynamodb_seeder_setup.sh 
+      && chmod +x ./init_database.sh 
+      && ./init_database.sh --forever"
     links:
       - dynamodb-local
     depends_on:
