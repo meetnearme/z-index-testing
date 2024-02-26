@@ -5,20 +5,38 @@ from faker import Faker
 
 fake = Faker()
 
-CITIES = ['New York', 'Chicago', 'Los Angeles', 'Houston', 'Phoenix', 'Seattle']
+CITIES = [
+    'New York', 'Chicago', 'Los Angeles', 'Houston', 'Phoenix', 'Seattle'
+]
+
+def calculate_z_order_index(start_time, end_time, lon, lat):
+    # Convert dimensions to binary representations
+    start_time_bin = bin(int(start_time.timestamp()))[2:].zfill(32)
+    end_time_bin = bin(int(end_time.timestamp()))[2:].zfill(32)
+    lon_bin = bin(int(lon * 10**7))[2:].zfill(32)
+    lat_bin = bin(int(lat * 10**7))[2:].zfill(32)
+
+    # interleave binary representations 
+    z_index_bin = ''.join(
+            start_time_bin[i:i+1] + end_time_bin[i:i+1] + lon_bin[i:i+1] + lat_bin[i:i+1]
+            for i in range(0, 32, 1)
+    )
+
+    return z_index_bin
+
 
 def generate_events(num_events):
     events = []
     for _ in range(num_events):
         # Randomly pick a city
         city = random.choice(CITIES)
-        
+
         # Randomly generate longitude and latitude within ranges
         # approximating the city's geographic area
         lon = random.uniform(city_lons[city][0], city_lons[city][1])
         lat = random.uniform(city_lats[city][0], city_lats[city][1])
 
-        # Randomly generate start date within the past year 
+        # Randomly generate start date within the past year
         # start = fake.date_time_between(start_date='-1y', end_date='now')
 
         # Randomly choose event duration between 1 to 8 hours
@@ -30,8 +48,15 @@ def generate_events(num_events):
         duration = 3
         end = start + timedelta(hours=duration)
 
+        # generate random name and description
+        name = fake.sentence(nb_words=4)
+        description = fake.paragraph(nb_sentences=5)
+
         # Generate a random UUID
         uuid = str(uuid_mod.uuid4())
+
+        # Calculate z order index
+        z_order_index = calculate_z_order_index(start, end, lon, lat)
 
         event = {
             'city': city,
@@ -39,7 +64,10 @@ def generate_events(num_events):
             'end': end,
             'lon': lon,
             'lat': lat,
-            'uuid': uuid
+            'uuid': uuid,
+            'name': name,
+            'description': description,
+            'z_order_index': z_order_index
         }
 
         events.append(event)
