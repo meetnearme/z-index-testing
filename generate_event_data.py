@@ -1,5 +1,6 @@
 import uuid as uuid_mod
 import random
+import json
 from datetime import datetime, timedelta
 from faker import Faker
 
@@ -25,54 +26,53 @@ def calculate_z_order_index(start_time, end_time, lon, lat):
     return z_index_bin
 
 
-def generate_events(num_events):
-    events = []
-    for _ in range(num_events):
-        # Randomly pick a city
-        city = random.choice(CITIES)
+def generate_events(num_events, output_file):
+    with open(output_file, 'w') as f: 
+        for _ in range(num_events):
+            # Randomly pick a city
+            city = random.choice(CITIES)
 
-        # Randomly generate longitude and latitude within ranges
-        # approximating the city's geographic area
-        lon = random.uniform(city_lons[city][0], city_lons[city][1])
-        lat = random.uniform(city_lats[city][0], city_lats[city][1])
+            # Randomly generate longitude and latitude within ranges
+            # approximating the city's geographic area
+            lon = random.uniform(city_lons[city][0], city_lons[city][1])
+            lat = random.uniform(city_lats[city][0], city_lats[city][1])
 
-        # Randomly generate start date within the past year
-        # start = fake.date_time_between(start_date='-1y', end_date='now')
+            # Randomly generate start date within the past year
+            # start = fake.date_time_between(start_date='-1y', end_date='now')
 
-        # Randomly choose event duration between 1 to 8 hours
-        # duration = random.randint(1, 8)
-        # end = start + timedelta(hours=duration)
+            # Randomly choose event duration between 1 to 8 hours
+            # duration = random.randint(1, 8)
+            # end = start + timedelta(hours=duration)
 
-        # set fixed start date and duration
-        start = datetime(2024, 6, 1, 12, 0, 0)
-        duration = 3
-        end = start + timedelta(hours=duration)
+            # set fixed start date and duration
+            start = datetime(2024, 6, 1, 12, 0, 0)
+            duration = 3
+            end = start + timedelta(hours=duration)
 
-        # generate random name and description
-        name = fake.sentence(nb_words=4)
-        description = fake.paragraph(nb_sentences=5)
+            # generate random name and description
+            name = fake.sentence(nb_words=4)
+            description = fake.paragraph(nb_sentences=5)
 
-        # Generate a random UUID
-        uuid = str(uuid_mod.uuid4())
+            # Generate a random UUID
+            uuid = str(uuid_mod.uuid4())
 
-        # Calculate z order index
-        z_order_index = calculate_z_order_index(start, end, lon, lat)
+            # Calculate z order index
+            z_order_index = calculate_z_order_index(start, end, lon, lat)
 
-        event = {
-            'city': city,
-            'start': start,
-            'end': end,
-            'lon': lon,
-            'lat': lat,
-            'uuid': uuid,
-            'name': name,
-            'description': description,
-            'z_order_index': z_order_index
-        }
+            event = {
+                'city': city,
+                'start': start.isoformat(),
+                'end': end.isoformat(),
+                'lon': lon,
+                'lat': lat,
+                'uuid': str(uuid),
+                'name': name,
+                'description': description,
+                'z_order_index': z_order_index
+            }
 
-        events.append(event)
-
-    return events
+            event_json = json.dumps(event)
+            f.write(event_json + '\n')
 
 
 # Longitude and latitude bounds for each city
