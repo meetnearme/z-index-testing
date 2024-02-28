@@ -1,14 +1,18 @@
 version: '3.8'
+
+volumes: 
+  dynamodb_data:
+
 services:
   dynamodb-local:
-    command: "-jar DynamoDBLocal.jar -inMemory -sharedDb"
+    command: "-jar DynamoDBLocal.jar -sharedDb -dbPath /home/dynamodblocal/data"
     user: root
     image: "amazon/dynamodb-local:latest"
     container_name: dynamodb-local-z-index
     ports:
       - "8000:8000"
     volumes:
-      - "./docker/dynamodb:/home/dynamodblocal/data"
+      - dynamodb_data:/home/dynamodblocal/data
     working_dir: /home/dynamodblocal
     networks:
       - backend
@@ -31,6 +35,7 @@ services:
       - AWS_SECRET_ACCESS_KEY=test
       - REGION=us-east-1
       - DYNAMODB_ENDPOINT=http://dynamodb-local:8000
+      - DROP_TABLE=${DROP_TABLE:-false}
     networks:
       - backend
 
