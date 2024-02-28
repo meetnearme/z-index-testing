@@ -10,6 +10,7 @@ CITIES = [
     'New York', 'Chicago', 'Los Angeles', 'Houston', 'Phoenix', 'Seattle'
 ]
 
+
 def calculate_z_order_index(start_time, end_time, lon, lat):
     # Convert dimensions to binary representations
     start_time_bin = bin(int(start_time.timestamp()))[2:].zfill(32)
@@ -17,7 +18,7 @@ def calculate_z_order_index(start_time, end_time, lon, lat):
     lon_bin = bin(int(lon * 10**7))[2:].zfill(32)
     lat_bin = bin(int(lat * 10**7))[2:].zfill(32)
 
-    # interleave binary representations 
+    # interleave binary representations
     z_index_bin = ''.join(
             start_time_bin[i:i+1] + end_time_bin[i:i+1] + lon_bin[i:i+1] + lat_bin[i:i+1]
             for i in range(0, 32, 1)
@@ -27,7 +28,7 @@ def calculate_z_order_index(start_time, end_time, lon, lat):
 
 
 def generate_events(num_events, output_file):
-    with open(output_file, 'w') as f: 
+    with open(output_file, 'w') as f:
         for _ in range(num_events):
             # Randomly pick a city
             city = random.choice(CITIES)
@@ -61,8 +62,8 @@ def generate_events(num_events, output_file):
 
             event = {
                 'city': city,
-                'start': start.isoformat(),
-                'end': end.isoformat(),
+                'start_time': start.isoformat(),
+                'end_time': end.isoformat(),
                 'lon': lon,
                 'lat': lat,
                 'uuid': str(uuid),
@@ -95,7 +96,4 @@ city_lats = {
 }
 
 # Generate 1000 events
-events = generate_events(1000)
-
-# View the first 5 event records
-print(events[:5])
+events = generate_events(1000, 'events.json')
