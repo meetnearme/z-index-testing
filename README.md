@@ -106,3 +106,37 @@ This example illustrates that concatenating destroys the locality that interleav
 
 With interleaving, small changes in the 4-dimensional coordinates result in small changes in the Z-order index. This keeps nearby points grouped together when indexed, enabling efficient range queries using the Z-order index.
 
+
+
+
+### Possible Further Steps
+
+1. Partition Key
+
+ Use a combination of the start time and geographic coordinates (latitude/longitude) as a composite partition key. For example:
+
+```
+partition_key = start_time_bin + lat_bin + lon_bin
+```
+
+Where `start_time_bin`, `lat_bin`, and `lon_bin` are binary representations of the start time, latitude, and longitude attributes respectively. 
+
+- The main rationale for including start time in the partition key is that your queries often focus on a specific time range, so this allows efficient access to events within a given time frame.
+
+- Adding latitude/longitude ensures some geographic grouping as well, so events in nearby locations are co-located together in partitions.
+
+- Using binary representations keeps the partition key compact and efficient.
+
+- The combined dimensions in the partition key provide enough variance to distribute data evenly across partitions.
+
+- The Z-order index calculated from (start_time, latitude, longitude) can be used as the sort key within each partition.
+
+- This approach ensures locality is preserved for range queries within each partition via the Z-order index sort key.
+
+- Related events are co-located together via the composite partition key.
+
+- Queries can efficiently access data for a time range across partitions in parallel.
+
+- Point access queries can use partition key + sort key to directly access a specific event.
+
+- A secondary index on the reverse mapping of partition key => event ID can enable reverse lookups if needed.
