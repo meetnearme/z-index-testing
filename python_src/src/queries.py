@@ -47,7 +47,6 @@ def query_point(lon, lat):
     """
     # Calculate min and max bounds for Z-order index
     start_time = datetime(2024, 6, 1, 12, 0, 0)  # Fixed start time for all events
-    end_time = start_time + timedelta(hours=3)   # Fixed duration of 3 hours
     epsilon = 0.00001
     # min_index = calculate_z_order_index(start_time, end_time, lon - 0.5 - epsilon, lat - 0.1 - epsilon)
     # max_index = calculate_z_order_index(start_time, end_time, lon + 0.5 + epsilon, lat + 0.1 + epsilon)
@@ -58,8 +57,8 @@ def query_point(lon, lat):
     min_lon, max_lon = city_lons[city_name]
 
     # Calculate min and max bounds for Z-order index
-    min_index = calculate_z_order_index(start_time, end_time, min_lon - epsilon, min_lat - epsilon)
-    max_index = calculate_z_order_index(start_time, end_time, max_lon + epsilon, max_lat + epsilon)
+    min_index = calculate_z_order_index(start_time, min_lon - epsilon, min_lat - epsilon)
+    max_index = calculate_z_order_index(start_time, max_lon + epsilon, max_lat + epsilon)
 
     response = table.scan(
         FilterExpression=Attr('EventType').eq('MeetNearMeEvent') &
@@ -78,11 +77,10 @@ def query_range(min_lat, max_lat, min_lon, max_lon):
     """
     # Calculate min and max bounds for Z-order index
     start_time = datetime(2024, 6, 1, 12, 0, 0)
-    end_time = start_time + timedelta(hours=3)
     epsilon = 0.00001
-    min_index = calculate_z_order_index(start_time, end_time, min_lon - epsilon, min_lat - epsilon)
-    max_index = calculate_z_order_index(start_time, end_time, max_lon + epsilon, max_lat + epsilon)
-
+    min_index = calculate_z_order_index(start_time, min_lon - epsilon, min_lat - epsilon)
+    max_index = calculate_z_order_index(start_time, max_lon + epsilon, max_lat + epsilon)
+
     # Query on Z-order index range and partition key of EventType
     response = table.query(
         KeyConditionExpression=Key('EventType').eq('MeetNearMeEvent') &

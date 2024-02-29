@@ -13,8 +13,8 @@ class TestSpatialQueries(unittest.TestCase):
     def test_query_point_existing_event(self):
         # Test querying for a point location where an event exists
         lon, lat = -73.98517, 40.74921  # Example location in New York
-        min_index = calculate_z_order_index(self.start_time, self.end_time, lon - 0.1, lat - 0.1)
-        max_index = calculate_z_order_index(self.start_time, self.end_time, lon + 0.1, lat + 0.1)
+        min_index = calculate_z_order_index(self.start_time, lon - 0.1, lat - 0.1)
+        max_index = calculate_z_order_index(self.start_time, lon + 0.1, lat + 0.1)
         events = query_point(lon, lat)
         min_index_bin = boto3.dynamodb.types.Binary(min_index.encode())
         max_index_bin = boto3.dynamodb.types.Binary(max_index.encode())
@@ -37,8 +37,8 @@ class TestSpatialQueries(unittest.TestCase):
         # Test querying for a bounding box where events exist
         min_lat, max_lat = 40.5, 41.2
         min_lon, max_lon =  -73.5, -74.5  # Example bounding box around New York
-        min_index = calculate_z_order_index(self.start_time, self.end_time, min_lon, min_lat)
-        max_index = calculate_z_order_index(self.start_time, self.end_time, max_lon, max_lat)
+        min_index = calculate_z_order_index(self.start_time, min_lon, min_lat)
+        max_index = calculate_z_order_index(self.start_time, max_lon, max_lat)
         min_index_bin = boto3.dynamodb.types.Binary(min_index.encode())
         max_index_bin = boto3.dynamodb.types.Binary(max_index.encode())
         events = query_range(min_lat, max_lat, min_lon, max_lon)
