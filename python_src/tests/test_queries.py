@@ -1,30 +1,79 @@
 import unittest
 import boto3
+import uuid
+from decimal import Decimal
 from datetime import datetime, timedelta 
 from python_src.src.queries import query_point, query_range
 from python_src.utils import calculate_z_order_index
+from botocore.config import Config
+
+db_config = Config(
+    region_name='us-east-1',
+    signature_version='v4',
+    retries={
+        'max_attempts': 10,
+        'mode': 'standard'
+    }
+)
 
 class TestSpatialQueries(unittest.TestCase):
     def setUp(self):
         self.start_time = datetime(2024, 6, 1, 12, 0, 0)
         self.end_time = self.start_time + timedelta(hours=3)
+        self.dynamodb = boto3.resource(
+                'dynamodb', 
+                endpoint_url="http://localhost:8000",
+                config=db_config
+                )
+        self.table = self.dynamodb.Table('EventsTable')
 
     # Test cases for query_point
     def test_query_point_existing_event(self):
         # Test querying for a point location where an event exists
         lon, lat = -73.98517, 40.74921  # Example location in New York
-        min_index = calculate_z_order_index(self.start_time, lon - 0.1, lat - 0.1)
-        max_index = calculate_z_order_index(self.start_time, lon + 0.1, lat + 0.1)
+        min_index = calculate_z_order_index(self.start_time, lon - 0.5, lat - 0.5)
+        max_index = calculate_z_order_index(self.start_time, lon + 0.5, lat + 0.5)
+
+        duration = 3
+        end = self.start_time + timedelta(hours=duration)
+
+        # Insert a record at the specified latitude and longitude 
+        lon_dec = Decimal(str(lon))
+        lat_dec = Decimal(str(lat))
+
+        event_uuid = str(uuid.uuid4())
+        z_order_index = calculate_z_order_index(self.start_time, lon, lat)
+        self.table.put_item(
+            Item={
+                'EventType': 'MeetNearMeEvent',
+                'ZOrderIndex': z_order_index.encode(),
+                'UUID': event_uuid,
+                'Longitude': lon_dec,
+                'Latitude': lat_dec,
+                'Name': 'Test event query point existing',
+                'Description': "test test",
+                'StartTime': self.start_time.isoformat(),
+                'EndTime': end.isoformat(),
+                'City': 'New York'
+            }
+        )
+
+        inserted_item = self.table.get_item(
+                Key={'EventType': 'MeetNearMeEvent', 'ZOrderIndex': z_order_index.encode()}
+        )['Item']
+
+        print("Inserted Item", inserted_item)
+
         events = query_point(lon, lat)
-        min_index_bin = boto3.dynamodb.types.Binary(min_index.encode())
-        max_index_bin = boto3.dynamodb.types.Binary(max_index.encode())
+        min_index_bin = min_index.encode()
+        max_index_bin = max_index.encode()
 
         self.assertGreater(len(events), 0)
         for event in events:
-            min_index_int = int.from_bytes(min_index_bin, byteorder='big')
-            max_index_int = int.from_bytes(max_index_bin, byteorder='big')
-            event_index_int = int.from_bytes(event['ZOrderIndex'], byteorder='big')
-            self.assertTrue(min_index_int <= event_index_int <= max_index_int)
+            print("event", event)
+            event_index_bin = event['ZOrderIndex'].value
+            self.assertTrue(min_index_bin <= event_index_bin <= max_index_bin)
+
 
     def test_query_point_no_event(self):
         # Test querying for a point location where no event exists
@@ -36,7 +85,7 @@ class TestSpatialQueries(unittest.TestCase):
     def test_query_range_existing_events(self):
         # Test querying for a bounding box where events exist
         min_lat, max_lat = 40.5, 41.2
-        min_lon, max_lon =  -73.5, -74.5  # Example bounding box around New York
+        min_lon, max_lon =   -74.5, -73.5  # Example bounding box around New York
         min_index = calculate_z_order_index(self.start_time, min_lon, min_lat)
         max_index = calculate_z_order_index(self.start_time, max_lon, max_lat)
         min_index_bin = boto3.dynamodb.types.Binary(min_index.encode())
@@ -52,6 +101,9 @@ class TestSpatialQueries(unittest.TestCase):
     def test_query_range_no_events(self):
         # Test querying for a bounding box where no events exist
         min_lat, max_lat = 35.0, 36.0
-        min_lon, max_lon =  -89.0, -90.0  # Example bounding box with no events
+        min_lon, max_lon =  -90.0, -89.0,  # Example bounding box with no events
         events = query_range(min_lat, max_lat, min_lon, max_lon)
         self.assertEqual(len(events), 0)
+
+    def tearDown(self):
+        self.dynamodb.meta.client.close()
