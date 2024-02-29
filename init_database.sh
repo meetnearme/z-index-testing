@@ -49,7 +49,7 @@ fi
 echo "Dynamodb table created"
 
 # Generate mock event data using Python script
-python3 ./generate_event_data.py
+python3 ./python_src/scripts/generate_mock_events.py
 
 # Split items into batches of 25 for BatchWriteItems
 split -l 25 events.json events.json.
