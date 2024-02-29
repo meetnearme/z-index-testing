@@ -4,6 +4,8 @@ export AWS_SECRET_ACCESS_KEY="test"
 export AWS_ACCESS_KEY_ID="test"
 export AWS_REGION="us-east-1"
 
+# export PYTHONPATH=./python_src
+
 # echo "database seed complete"
 seed_complete_file=".seed_complete"
 
@@ -49,7 +51,7 @@ fi
 echo "Dynamodb table created"
 
 # Generate mock event data using Python script
-python3 ./python_src/scripts/generate_mock_events.py
+python3 -m python_src.scripts.generate_mock_events
 
 # Split items into batches of 25 for BatchWriteItems
 split -l 25 events.json events.json.
