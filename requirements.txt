@@ -1,3 +1,4 @@
 faker
 uuid
 boto3
+pytest-benchmark
