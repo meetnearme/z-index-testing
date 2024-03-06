@@ -65,12 +65,8 @@ batch_write() {
 
     contents=$(cat "$file")
 
-    # echo "Contents: $contents"
-
     # parse JSON into array
     items=$(jq --slurp '.' <<< "$contents")
-
-    # Initialize the RequestItems object
 
     # loop through array 
 
