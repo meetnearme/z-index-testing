@@ -9,6 +9,9 @@ export AWS_REGION="us-east-1"
 # echo "database seed complete"
 seed_complete_file=".seed_complete"
 
+# testing pass env vars to drop various tables if wanted
+# echo "Hell var: $HELLO"
+# echo "Goodbye var: $GOODBYE"
 
 if [ -f "$seed_complete_file" ]; then
     echo "Seed data already loaded - skipping"
@@ -20,12 +23,13 @@ echo "Start creating database tables"
 # Check if drop table flag is passed 
 if [ "$DROP_TABLE" = "true" ]; then
     echo "Dropping the existing Dynamodb Table"
-    aws dynamodb delete-table --table-name EventsTable \
+    aws dynamodb delete-table --table-name EventsTableZOrder \
         --endpoint-url http://dynamodb-local:8000 \
         --region $AWS_REGION
 fi
 
-DB_TABLE_NAME="EventsTable"
+# Setup and seeding of ZOrder table
+DB_TABLE_NAME="EventsTableZOrder"
 
 if aws dynamodb describe-table \
     --table-name $DB_TABLE_NAME \
@@ -48,7 +52,7 @@ aws dynamodb create-table \
     --region $AWS_REGION
 fi
 
-echo "Dynamodb table created"
+echo "Dynamodb z order table created"
 
 # Generate mock event data using Python script
 python3 -m python_src.scripts.generate_mock_events
@@ -57,9 +61,9 @@ python3 -m python_src.scripts.generate_mock_events
 split -l 25 events.json events.json.
 
 # batch write function run in parallel
-echo "Starting batch write..."
+echo "Starting batch write to z order table..."
 puts=()
-batch_write() {
+batch_write_z_order_table() {
     echo "In batch write"
     local file="$1"
 
@@ -120,10 +124,10 @@ batch_write() {
     done <<< "$(echo "$items" | jq -c '.[]')"
 
 
-    request_json_string='{"EventsTable": []}'
+    request_json_string='{"$DB_TABLE_NAME": []}'
 
     for json_item in "${puts[@]}"; do
-        request_json_string="$(jq --argjson json_put_request "$json_item" '.EventsTable += [$json_put_request]' <<< "$request_json_string")"
+        request_json_string="$(jq --argjson json_put_request "$json_item" '."$DB_TABLE_NAME" += [$json_put_request]' <<< "$request_json_string")"
     done
 
     aws dynamodb batch-write-item \
@@ -153,7 +157,7 @@ batch_write() {
 
 # Run batch_write in parallel using xargs
 for file in events.json.*; do 
-    batch_write "$file" &
+    batch_write_z_order_table "$file" &
 done
 # file=events.json.aa
 # batch_write "$file"
@@ -162,12 +166,12 @@ done
 wait
 
 rm events.json.*
-echo "Finished batch writes"
+echo "Finished batch writes to z order table"
 
 
 echo "Now scanning db"
-aws dynamodb scan --table-name EventsTable --endpoint-url http://dynamodb-local:8000 --select "COUNT" --region $AWS_REGION
-aws dynamodb scan --table-name EventsTable --endpoint-url http://dynamodb-local:8000 --region $AWS_REGION
+aws dynamodb scan --table-name $DB_TABLE_NAME --endpoint-url http://dynamodb-local:8000 --select "COUNT" --region $AWS_REGION
+aws dynamodb scan --table-name $DB_TABLE_NAME --endpoint-url http://dynamodb-local:8000 --region $AWS_REGION
 
 
 echo "Database seed complete"
