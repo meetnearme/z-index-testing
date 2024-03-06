@@ -29,6 +29,9 @@ CITIES = [
     'New York', 'Chicago', 'Los Angeles', 'Houston', 'Phoenix', 'Seattle'
 ]
 
+start_date = datetime(2024, 6, 1)
+end_date = start_date + timedelta(days=90)
+
 def map_float_to_sortable_int(float_value):
     """
     Maps a floating-point value to an unsigned integer that can be lexicographically sorted
@@ -82,15 +85,10 @@ def generate_events(num_events, output_file):
             lat = random.uniform(city_lats[city][0], city_lats[city][1])
 
             # Randomly generate start date within the past year
-            # start = fake.date_time_between(start_date='-1y', end_date='now')
+            start = random.uniform(start_date, end_date)
 
-            # Randomly choose event duration between 1 to 8 hours
-            # duration = random.randint(1, 8)
-            # end = start + timedelta(hours=duration)
-
-            # set fixed start date and duration
-            start = datetime(2024, 6, 1, 12, 0, 0)
-            duration = 3
+            # select random duration between 1 and 8 hours
+            duration = random.randint(1, 8)
             end = start + timedelta(hours=duration)
 
             # generate random name and description
