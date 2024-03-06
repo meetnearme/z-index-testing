@@ -33,3 +33,22 @@ range_query_params = [
         'min_lon': -122.75, 'max_lon': -121.5
     },  # Seattle
 ]
+
+temporal_query_params = [
+    {
+        'start_time': '2024-06-01T00:00:00',
+        'end_time': '2024-09-01T23:59:59'
+    },  # Full three-month range
+    {
+        'start_time': '2024-06-15T00:00:00',
+        'end_time': '2024-06-30T23:59:59'
+    },  # Second half of June
+    {
+        'start_time': '2024-07-01T00:00:00',
+        'end_time': '2024-07-31T23:59:59'
+    },  # Full month of July
+    {
+        'start_time': '2024-08-01T00:00:00',
+        'end_time': '2024-08-15T23:59:59'
+    },  # First half of August
+]
