@@ -20,7 +20,7 @@ dynamodb = boto3.resource(
     config=db_config
 )
 
-table = dynamodb.Table('EventsTable')
+table = dynamodb.Table('EventsTableZOrder')
 
 city_lons = {
     'New York': (-74.5, -73.5),
