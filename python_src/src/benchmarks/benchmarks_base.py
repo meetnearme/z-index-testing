@@ -5,11 +5,9 @@ from .metrics import MetricsCollector
 
 
 class BenchmarkBase:
-    def __init__(self):
-        self.metrics_collector = MetricsCollector()
-
     def setup_method(self, table_name):
         # Initialize the dynamodb resource and table 
+        self.metrics_collector = MetricsCollector()
         db_config = Config(
             region_name='us-east-1',
             signature_version='v4',
@@ -30,8 +28,8 @@ class BenchmarkBase:
         self.dynamodb = None
         self.table = None
 
-    def capture_metrics(self, result, start_time, end_time):
-        self.metrics_collector.capture_metrics(result, start_time, end_time)
+    def capture_metrics(self, result, metrics, start_time, end_time):
+        self.metrics_collector.capture_metrics(result, metrics, start_time, end_time)
 
     def store_metrics(self, file_path):
         self.metrics_collector.store_metrics(file_path)
