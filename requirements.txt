@@ -3,3 +3,5 @@ uuid
 boto3
 pytest
 pytest-benchmark==4.0.0
+pandas
+matplotlib
