@@ -25,6 +25,17 @@ as http://dynamodb-local:8000
 DROP_TABLE=true docker compose up # will drop the Events Table to reset
 ``` 
 
+## Testing
+
+```bash 
+pytest # running from root will find standard tests
+
+# Below cd into python_src to collect benchmark tests
+cd python_src
+pytest --benchmark-only # will skip all non benchmark tests
+pytest # will run all python tests
+```
+
 ### Resources 
 
 #### JQ 
