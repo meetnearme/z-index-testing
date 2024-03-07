@@ -16,20 +16,22 @@ class TestBenchmarkZOrder(BenchmarkBase):
     def benchmark(self, benchmark):
         return benchmark
 
+    @pytest.mark.parametrize('params', point_query_params)
     @pytest.mark.benchmark(group='z_order')
-    def test_benchmark_query_point(self, benchmark):
-        for params in point_query_params:
-            result, metrics = benchmark(query_point, params['lon'], params['lat'])
-            self.capture_metrics(result, metrics['start_time'], metrics['end_time'])
-            self.store_metrics('metrics/z_order.csv')
+    def test_benchmark_query_point(self, benchmark, params):
+        result, metrics = benchmark(query_point, params['lon'], params['lat'])
+        start_time, end_time = metrics.get('start_time', 0), metrics.get('end_time', 0)
+        self.capture_metrics(result, metrics, start_time, end_time)
+        self.store_metrics('z_order_point.csv')
         self.generate_report()
 
+    @pytest.mark.parametrize('params', range_query_params)
     @pytest.mark.benchmark(group='z_order')
-    def test_benchmark_query_range(self, benchmark):
-        for params in range_query_params:
-            result, metrics = benchmark(query_range, params['min_lat'], params['max_lat'], params['min_lon'], params['max_lon'])
-            self.capture_metrics(result, metrics['start_time'], metrics['end_time'])
-            self.store_metrics('metrics/z_order.csv')
+    def test_benchmark_query_range(self, benchmark, params):
+        result, metrics = benchmark(query_range, params['min_lat'], params['max_lat'], params['min_lon'], params['max_lon'])
+        start_time, end_time = metrics.get('start_time', 0), metrics.get('end_time', 0)
+        self.capture_metrics(result, metrics, start_time, end_time)
+        self.store_metrics('z_order_range.csv')
         self.generate_report()
 
     def generate_report(self):
