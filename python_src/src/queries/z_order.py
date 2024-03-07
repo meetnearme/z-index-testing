@@ -1,8 +1,10 @@
+from datetime import datetime, timedelta
+
 import boto3
 from boto3.dynamodb.conditions import Key, Attr
 from botocore.config import Config
+
 from ..indexing.z_order import calculate_z_order_index
-from datetime import datetime, timedelta
 
 db_config = Config(
     region_name='us-east-1',
@@ -51,10 +53,6 @@ def query_point(lon, lat):
     min_index = calculate_z_order_index(start_time, lon - 0.0001 - epsilon, lat - 0.0001 - epsilon)
     max_index = calculate_z_order_index(start_time, lon + 0.0001 + epsilon, lat + 0.0001 + epsilon)
 
-    # Calculate min and max bounds for Z-order index
-    # min_index = calculate_z_order_index(start_time, min_lon - epsilon, min_lat - epsilon)
-    # max_index = calculate_z_order_index(start_time, max_lon + epsilon, max_lat + epsilon)
-
     # Query on partition-key and Z-order index range
     response = table.query(
         KeyConditionExpression=Key('EventType').eq('MeetNearMeEvent') &
@@ -71,16 +69,6 @@ def query_range(min_lat, max_lat, min_lon, max_lon):
     epsilon = 0.01
     min_index = calculate_z_order_index(start_time, min_lon - epsilon, min_lat - epsilon)
     max_index = calculate_z_order_index(start_time, max_lon + epsilon, max_lat + epsilon)
-
-    # Pretty-print min_index and max_index
-    # min_index_binary = bin(int(min_index, 2))[2:].zfill(96)
-    # max_index_binary = bin(int(max_index, 2))[2:].zfill(96)
-
-    # pretty_min_index = ' '.join([min_index_binary[i:i+8] for i in range(0, len(min_index_binary), 8)])
-    # pretty_max_index = ' '.join([max_index_binary[i:i+8] for i in range(0, len(max_index_binary), 8)])
-
-    # print(f"Min Index: {pretty_min_index}")
-    # print(f"Max Index: {pretty_max_index}")
 
     # Query on Z-order index range and partition key of EventType
     response = table.query(
