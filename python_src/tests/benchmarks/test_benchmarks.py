@@ -1,7 +1,7 @@
 import pytest
 
 # from benchmarks import BenchmarkBase
-from python_src.src.benchmarks.benchmarks import BenchmarkBase
+from ...src.benchmarks.benchmarks import BenchmarkBase
 
 
 class TestBenchmarking(BenchmarkBase):

@@ -2,9 +2,9 @@ import unittest
 import boto3
 import uuid
 from decimal import Decimal
-from datetime import datetime, timedelta 
-from python_src.src.queries import query_point, query_range
-from python_src.utils import calculate_z_order_index
+from datetime import datetime, timedelta
+from ..src.queries.z_order import query_point, query_range
+from ..src.indexing.z_order import calculate_z_order_index
 from botocore.config import Config
 
 db_config = Config(
