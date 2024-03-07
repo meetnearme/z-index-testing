@@ -55,38 +55,53 @@ def query_point(lon, lat):
     min_index = calculate_z_order_index(start_time, lon - 0.0001 - epsilon, lat - 0.0001 - epsilon)
     max_index = calculate_z_order_index(start_time, lon + 0.0001 + epsilon, lat + 0.0001 + epsilon)
 
-    # Query on partition-key and Z-order index range
     start_time_bench = time.time()
     try:
         response = table.query(
             KeyConditionExpression=Key('EventType').eq('MeetNearMeEvent') &
             Key('ZOrderIndex').between(min_index.encode(), max_index.encode())
         )
+        end_time_bench = time.time()
+        metrics = {
+            'start_time': start_time_bench,
+            'end_time': end_time_bench,
+            'read_capacity_units': response.get('ConsumedCapacity', {}).get('CapacityUnits', 0),
+            'write_capacity_units': 0,
+            'conditional_check_failed': response.get('ConditionalCheckFailedCount', 0),
+            'item_size_bytes': sum(len(str(item).encode('utf-8')) for item in response.get('Items', [])),
+            'latency': time.time() - start_time_bench,
+            'item_count': len(response.get('Items', [])),
+            'timestamp': time.time()
+        }
+        return response.get('Items', []), metrics
     except botocore.exceptions.ClientError as e:
-        # Handle any DynamoDB-related exceptions
-        print(f"DynamoDB query failed: {e}")
+        error_code = e.response['Error']['Code']
+        if error_code == 'ResourceNotFoundException':
+            print(f"Table does not exist: {e}")
+        elif error_code == 'AccessDeniedException':
+            print(f"Access denied to the table: {e}")
+        else:
+            print(f"Unexpected error occurred: {e}")
         return [], {
             'read_capacity_units': 0,
             'write_capacity_units': 0,
-            'throttled_requests': 0,
             'conditional_check_failed': 0,
             'item_size_bytes': 0,
-                'latency': 0,
-                'item_count': 0,
-                'timestamp': time.time()
-            }
-        end_time_bench = time.time()
-        metrics = {
-            'read_capacity_units': response['ConsumedCapacity']['CapacityUnits'],
-            'write_capacity_units': 0,
-            'throttled_requests': response['ConsumedCapacity'].get('ThrottledRequests', 0),
-            'conditional_check_failed': response.get('ConditionalCheckFailedCount', 0),
-            'item_size_bytes': sum(len(item.encode('utf-8')) for item in response['Items']),
-            'latency': end_time_bench - start_time_bench,
-            'item_count': len(response['Items']),
+            'latency': 0,
+            'item_count': 0,
             'timestamp': time.time()
         }
-        return response['Items'], metrics
+    except Exception as e:
+        print(f"Unexpected error occurred: {e}")
+        return [], {
+            'read_capacity_units': 0,
+            'write_capacity_units': 0,
+            'conditional_check_failed': 0,
+            'item_size_bytes': 0,
+            'latency': 0,
+            'item_count': 0,
+            'timestamp': time.time()
+        }
 
 
 def query_range(min_lat, max_lat, min_lon, max_lon):
@@ -106,28 +121,44 @@ def query_range(min_lat, max_lat, min_lon, max_lon):
             KeyConditionExpression=Key('EventType').eq('MeetNearMeEvent') &
             Key('ZOrderIndex').between(min_index.encode(), max_index.encode())
         )
+        end_time_bench = time.time()
+        metrics = {
+            'start_time': start_time_bench,
+            'end_time': end_time_bench,
+            'read_capacity_units': response.get('ConsumedCapacity', {}).get('CapacityUnits', 0),
+            'write_capacity_units': 0,
+            'conditional_check_failed': response.get('ConditionalCheckFailedCount', 0),
+            'item_size_bytes': sum(len(str(item).encode('utf-8')) for item in response.get('Items', [])),
+            'latency': time.time() - start_time_bench,
+            'item_count': len(response.get('Items', [])),
+            'timestamp': time.time()
+        }
+        return response.get('Items', []), metrics
     except botocore.exceptions.ClientError as e:
-        # Handle any DynamoDB-related exceptions
-        print(f"DynamoDB query failed: {e}")
+        error_code = e.response['Error']['Code']
+        if error_code == 'ResourceNotFoundException':
+            print(f"Table does not exist: {e}")
+        elif error_code == 'AccessDeniedException':
+            print(f"Access denied to the table: {e}")
+        else:
+            print(f"Unexpected error occurred: {e}")
         return [], {
             'read_capacity_units': 0,
             'write_capacity_units': 0,
-            'throttled_requests': 0,
             'conditional_check_failed': 0,
             'item_size_bytes': 0,
             'latency': 0,
             'item_count': 0,
             'timestamp': time.time()
         }
-    end_time_bench = time.time()
-    metrics = {
-        'read_capacity_units': response['ConsumedCapacity']['CapacityUnits'],
-        'write_capacity_units': 0,
-        'throttled_requests': response['ConsumedCapacity'].get('ThrottledRequests', 0),
-        'conditional_check_failed': response.get('ConditionalCheckFailedCount', 0),
-        'item_size_bytes': sum(len(item.encode('utf-8')) for item in response['Items']),
-        'latency': end_time_bench - start_time_bench,
-        'item_count': len(response['Items']),
-        'timestamp': time.time()
-    }
-    return response['Items'], metrics
+    except Exception as e:
+        print(f"Unexpected error occurred: {e}")
+        return [], {
+            'read_capacity_units': 0,
+            'write_capacity_units': 0,
+            'conditional_check_failed': 0,
+            'item_size_bytes': 0,
+            'latency': 0,
+            'item_count': 0,
+            'timestamp': time.time()
+        }
