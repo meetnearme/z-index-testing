@@ -30,6 +30,13 @@ class BenchmarkBase:
         self.dynamodb = None
         self.table = None
 
+    def capture_metrics(self, result, start_time, end_time):
+        self.metrics_collector.capture_metrics(result, start_time, end_time)
+
+    def store_metrics(self, file_path):
+        self.metrics_collector.store_metrics(file_path)
+
+
     def query_point(self, lon, lat):
         # place holder method for query_point op
         pass
