@@ -125,10 +125,11 @@ batch_write() {
     done <<< "$(echo "$items" | jq -c '.[]')"
 
 
-    request_json_string='{'"$table_name"': []}'
+    request_json_string="{\"$table_name\": []}"
+    filter_string=".${table_name} += [\$json_put_request]"
 
     for json_item in "${puts[@]}"; do
-        request_json_string="$(jq --argjson json_put_request "$json_item" '."${table_name}" += [$json_put_request]' <<< "$request_json_string")"
+        request_json_string="$(jq --argjson json_put_request "$json_item" "$filter_string" <<< "$request_json_string")"
     done
 
     aws dynamodb batch-write-item \
