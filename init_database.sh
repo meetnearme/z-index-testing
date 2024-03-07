@@ -39,7 +39,7 @@ if aws dynamodb describe-table \
 else
 # Create Dynamodb table
 aws dynamodb create-table \
-    --table-name EventsTable \
+    --table-name $DB_TABLE_NAME \
     --attribute-definitions \
         AttributeName=EventType,AttributeType=S \
         AttributeName=ZOrderIndex,AttributeType=B \
@@ -63,9 +63,10 @@ split -l 25 events.json events.json.
 # batch write function run in parallel
 echo "Starting batch write to z order table..."
 puts=()
-batch_write_z_order_table() {
+batch_write() {
     echo "In batch write"
     local file="$1"
+    local table_name="$2"
 
     contents=$(cat "$file")
 
@@ -124,40 +125,21 @@ batch_write_z_order_table() {
     done <<< "$(echo "$items" | jq -c '.[]')"
 
 
-    request_json_string='{"$DB_TABLE_NAME": []}'
+    request_json_string='{'"$table_name"': []}'
 
     for json_item in "${puts[@]}"; do
-        request_json_string="$(jq --argjson json_put_request "$json_item" '."$DB_TABLE_NAME" += [$json_put_request]' <<< "$request_json_string")"
+        request_json_string="$(jq --argjson json_put_request "$json_item" '."${table_name}" += [$json_put_request]' <<< "$request_json_string")"
     done
 
     aws dynamodb batch-write-item \
          --request-items "$request_json_string" \
          --endpoint-url http://dynamodb-local:8000 \
          --region $AWS_REGION
-
-    # Follow section is for use with writing to file and batch requesting from file. 
-
-    # echo "Construct request from file"
-    # touch request_items.json 
-    # echo "$request_json" > request_items.json 
-
-    # request_json='{"RequestItems": {"EventsTable": []}}'
-
-    # for json_item in "${puts[@]}"; do
-    #     request_json="$(jq --argjson json_put_request "$json_item" '.RequestItems.EventsTable += [$json_put_request]' <<< "$request_json")"
-    # done
-
-    # Option for using temp file saved for later review if we need different option
-    # aws dynamodb batch-write-item \
-    #      --cli-input-json file://request_items.json \
-    #      --endpoint-url http://dynamodb-local:8000 \
-    #      --region $AWS_REGION
-
 } 
 
 # Run batch_write in parallel using xargs
 for file in events.json.*; do 
-    batch_write_z_order_table "$file" &
+    batch_write "$file" "$DB_TABLE_NAME" &
 done
 # file=events.json.aa
 # batch_write "$file"
@@ -174,7 +156,7 @@ aws dynamodb scan --table-name $DB_TABLE_NAME --endpoint-url http://dynamodb-loc
 aws dynamodb scan --table-name $DB_TABLE_NAME --endpoint-url http://dynamodb-local:8000 --region $AWS_REGION
 
 
-echo "Database seed complete"
+echo "Database seed complete "
 touch $seed_complete_file
 
 if [ $1 == "--forever" ]
