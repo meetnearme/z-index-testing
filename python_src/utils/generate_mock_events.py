@@ -4,7 +4,7 @@ import json
 from datetime import datetime, timedelta
 from faker import Faker
 
-from src.indexing.z_order import calculate_z_order_index
+from ..src.indexing.z_order import calculate_z_order_index
 
 fake = Faker()
 
