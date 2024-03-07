@@ -1,0 +1,2 @@
+read_capacity_units,write_capacity_units,conditional_check_failed,item_size_bytes,latency,item_count,timestamp
+0,0,0,176831,0.02683281898498535,289,1709848322.064491
