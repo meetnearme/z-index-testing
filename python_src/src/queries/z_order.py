@@ -1,7 +1,7 @@
 import boto3
 from boto3.dynamodb.conditions import Key, Attr
 from botocore.config import Config
-from ..utils import calculate_z_order_index
+from ..indexing.z_order import calculate_z_order_index
 from datetime import datetime, timedelta
 
 db_config = Config(
