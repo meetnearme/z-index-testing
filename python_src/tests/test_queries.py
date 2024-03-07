@@ -25,7 +25,7 @@ class TestSpatialQueries(unittest.TestCase):
                 endpoint_url="http://localhost:8000",
                 config=db_config
                 )
-        self.table = self.dynamodb.Table('EventsTable')
+        self.table = self.dynamodb.Table('EventsTableZOrderIndex')
 
     # Test cases for query_point
     def test_query_point_existing_event(self):
@@ -73,7 +73,6 @@ class TestSpatialQueries(unittest.TestCase):
             print("event", event)
             event_index_bin = event['ZOrderIndex'].value
             self.assertTrue(min_index_bin <= event_index_bin <= max_index_bin)
-
 
     def test_query_point_no_event(self):
         # Test querying for a point location where no event exists
