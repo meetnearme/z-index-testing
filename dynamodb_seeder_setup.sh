@@ -15,6 +15,4 @@ apt-get update
 apt-get install jq sed grep -y
 xargs --version # make sure xargs is installed already in the container
 
-
-pip3 install --no-cache-dir -r requirements.txt 
-
+# pip3 install --no-cache-dir -r requirements.txt 
