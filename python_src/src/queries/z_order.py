@@ -6,6 +6,7 @@ import botocore
 from boto3.dynamodb.conditions import Key, Attr
 from botocore.config import Config
 
+from ..benchmarks.metrics import extract_metrics
 from ..indexing.z_order import calculate_z_order_index
 
 db_config = Config(
@@ -61,18 +62,7 @@ def query_point(lon, lat):
             KeyConditionExpression=Key('EventType').eq('MeetNearMeEvent') &
             Key('ZOrderIndex').between(min_index.encode(), max_index.encode())
         )
-        end_time_bench = time.time()
-        metrics = {
-            'start_time': start_time_bench,
-            'end_time': end_time_bench,
-            'read_capacity_units': response.get('ConsumedCapacity', {}).get('CapacityUnits', 0),
-            'write_capacity_units': 0,
-            'conditional_check_failed': response.get('ConditionalCheckFailedCount', 0),
-            'item_size_bytes': sum(len(str(item).encode('utf-8')) for item in response.get('Items', [])),
-            'latency': time.time() - start_time_bench,
-            'item_count': len(response.get('Items', [])),
-            'timestamp': time.time()
-        }
+        metrics = extract_metrics(response, start_time_bench)
         return response.get('Items', []), metrics
     except botocore.exceptions.ClientError as e:
         error_code = e.response['Error']['Code']
@@ -92,8 +82,7 @@ def query_point(lon, lat):
             'timestamp': time.time()
         }
     except Exception as e:
-        print(f"Unexpected error occurred: {e}")
-        return [], {
+        print(f"Unexpected error occurred: {e}") return [], {
             'read_capacity_units': 0,
             'write_capacity_units': 0,
             'conditional_check_failed': 0,
@@ -121,18 +110,7 @@ def query_range(min_lat, max_lat, min_lon, max_lon):
             KeyConditionExpression=Key('EventType').eq('MeetNearMeEvent') &
             Key('ZOrderIndex').between(min_index.encode(), max_index.encode())
         )
-        end_time_bench = time.time()
-        metrics = {
-            'start_time': start_time_bench,
-            'end_time': end_time_bench,
-            'read_capacity_units': response.get('ConsumedCapacity', {}).get('CapacityUnits', 0),
-            'write_capacity_units': 0,
-            'conditional_check_failed': response.get('ConditionalCheckFailedCount', 0),
-            'item_size_bytes': sum(len(str(item).encode('utf-8')) for item in response.get('Items', [])),
-            'latency': time.time() - start_time_bench,
-            'item_count': len(response.get('Items', [])),
-            'timestamp': time.time()
-        }
+        metrics = extract_metrics(response, start_time_bench)
         return response.get('Items', []), metrics
     except botocore.exceptions.ClientError as e:
         error_code = e.response['Error']['Code']
