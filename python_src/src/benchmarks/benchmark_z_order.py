@@ -23,7 +23,7 @@ class TestBenchmarkZOrder(BenchmarkBase):
         start_time, end_time = metrics.get('start_time', 0), metrics.get('end_time', 0)
         self.capture_metrics(result, metrics, start_time, end_time)
         self.store_metrics('z_order_point.csv')
-        self.generate_report()
+        self.generate_report('point')
 
     @pytest.mark.parametrize('params', range_query_params)
     @pytest.mark.benchmark(group='z_order')
@@ -32,8 +32,11 @@ class TestBenchmarkZOrder(BenchmarkBase):
         start_time, end_time = metrics.get('start_time', 0), metrics.get('end_time', 0)
         self.capture_metrics(result, metrics, start_time, end_time)
         self.store_metrics('z_order_range.csv')
-        self.generate_report()
+        self.generate_report('range')
 
-    def generate_report(self):
+    def generate_report(self, query_type):
         aggregated_metrics = aggregate_metrics(self.metrics_collector.metrics)
-        generate_report(aggregated_metrics)
+        indexing_schemes = [
+                {'name': 'Z-Order Index', 'metrics': aggregated_metrics}
+        ]
+        generate_report(indexing_schemes, query_type)
