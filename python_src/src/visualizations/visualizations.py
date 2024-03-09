@@ -2,6 +2,7 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import datetime
 
 
 class Visualizer:
@@ -85,19 +86,20 @@ class Visualizer:
         ax.legend()
         return fig
 
-
-    def export_plots(self, file_prefix):
+    def export_plots(self, query_type):
            os.makedirs('visualizations', exist_ok=True)
 
+           timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+
            latency_fig = self.plot_latency()
-           latency_fig.savefig(f'visualizations/{file_prefix}_latency.png')
+           latency_fig.savefig(f'visualizations/{timestamp}_{query_type}_latency.png')
 
            read_capacity_fig = self.plot_read_capacity()
-           read_capacity_fig.savefig(f'visualizations/{file_prefix}_read_capacity.png')
+           read_capacity_fig.savefig(f'visualizations/{timestamp}_{query_type}_read_capacity.png')
 
            item_count_fig = self.plot_item_count()
-           item_count_fig.savefig(f'visualizations/{file_prefix}_item_count.png')
+           item_count_fig.savefig(f'visualizations/{timestamp}_{query_type}_item_count.png')
 
            all_fig = self.plot_all()
-           all_fig.savefig(f'visualizations/{file_prefix}_all.png')
+           all_fig.savefig(f'visualizations/{timestamp}_{query_type}_all.png')
 
