@@ -1,3 +1,6 @@
+import os 
+import datetime
+
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -24,6 +27,11 @@ def generate_report(indexing_schemes, query_type):
     num_schemes = len(indexing_schemes)
     num_rows = 2 
     num_cols = 3
+
+
+    timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+    report_filename = f'{timestamp}_{query_type}_benchmark_report.png'
+    os.makedirs('benchmark_reports', exist_ok=True)
 
     # create visulaizations, charts and tables to present the results
     plt.figure(figsize=(16,8))
@@ -69,4 +77,4 @@ def generate_report(indexing_schemes, query_type):
     plt.ylabel('Total Items')
 
     plt.tight_layout()
-    plt.savefig('benchmark_report.png')
+    plt.savefig(f'benchmark_reports/{report_filename}')
