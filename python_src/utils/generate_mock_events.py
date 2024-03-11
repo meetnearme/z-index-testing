@@ -1,5 +1,6 @@
 import uuid as uuid_mod
 import random
+import pytz
 import json
 from datetime import datetime, timedelta
 from faker import Faker
@@ -30,7 +31,7 @@ CITIES = [
     'New York', 'Chicago', 'Los Angeles', 'Houston', 'Phoenix', 'Seattle'
 ]
 
-start_date = datetime(2099, 1, 1)
+start_date = datetime(2099, 1, 1, tzinfo=pytz.UTC)
 end_date = start_date + timedelta(days=90)
 
 
@@ -46,7 +47,8 @@ def generate_events(num_events, output_file):
             lat = random.uniform(city_lats[city][0], city_lats[city][1])
 
             # Randomly generate start date within the past year
-            start = random.uniform(start_date, end_date)
+            # start = random.uniform(start_date, end_date)
+            start = pytz.UTC.localize(fake.date_time_between(start_date=start_date, end_date=end_date))
 
             # select random duration between 1 and 8 hours
             duration = random.randint(1, 8)
@@ -60,7 +62,7 @@ def generate_events(num_events, output_file):
             uuid = str(uuid_mod.uuid4())
 
             # Calculate z order index
-            z_order_index = calculate_z_order_index(start, lon, lat)
+            z_order_index = calculate_z_order_index(start, lon, lat, 'actual')
 
             event = {
                 'city': city,

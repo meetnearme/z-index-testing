@@ -1,6 +1,7 @@
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 
+import pytz
 import boto3
 import botocore
 from boto3.dynamodb.conditions import Key, Attr
@@ -46,15 +47,19 @@ city_lats = {
 }
 
 
-def query_point(lon, lat):
+def query_point(lon, lat, start_time, end_time):
     """
     Query events near a specific longitude and latitude.
     """
+
+    # Set the start date to midnight and the end date to 23:59:59
+    start_date = datetime.combine(start_time.date(), time.min).replace(tzinfo=pytz.UTC)
+    end_date = (datetime.combine(end_time.date(), time.max).replace(microsecond=999999) - timedelta(seconds=0.000001)).replace(tzinfo=pytz.UTC)
+
     # Calculate min and max bounds for Z-order index
-    start_time = datetime(2024, 6, 1, 12, 0, 0)  # Fixed start time for all events
     epsilon = 0.00001
-    min_index = calculate_z_order_index(start_time, lon - 0.0001 - epsilon, lat - 0.0001 - epsilon)
-    max_index = calculate_z_order_index(start_time, lon + 0.0001 + epsilon, lat + 0.0001 + epsilon)
+    min_index = calculate_z_order_index(start_date, lon - 0.0001 - epsilon, lat - 0.0001 - epsilon, 'min')
+    max_index = calculate_z_order_index(end_date, lon + 0.0001 + epsilon, lat + 0.0001 + epsilon, 'max')
 
     start_time_bench = time.time()
     try:
@@ -82,7 +87,8 @@ def query_point(lon, lat):
             'timestamp': time.time()
         }
     except Exception as e:
-        print(f"Unexpected error occurred: {e}") return [], {
+        print(f"Unexpected error occurred: {e}")
+        return [], {
             'read_capacity_units': 0,
             'write_capacity_units': 0,
             'conditional_check_failed': 0,
@@ -93,15 +99,18 @@ def query_point(lon, lat):
         }
 
 
-def query_range(min_lat, max_lat, min_lon, max_lon):
+def query_range(min_lat, max_lat, min_lon, max_lon, start_time, end_time):
     """
     Query events within a bounding box defined by minimum and maximum latitude and longitude.
     """
+    # Set the start date to midnight and the end date to 23:59:59
+    start_date = datetime.combine(start_time.date(), time.min).replace(tzinfo=pytz.UTC)
+    end_date = (datetime.combine(end_time.date(), time.max).replace(microsecond=999999) - timedelta(seconds=0.000001)).replace(tzinfo=pytz.UTC)
+
     # Calculate min and max bounds for Z-order index
-    start_time = datetime(2024, 6, 1, 12, 0, 0)
-    epsilon = 0.01
-    min_index = calculate_z_order_index(start_time, min_lon - epsilon, min_lat - epsilon)
-    max_index = calculate_z_order_index(start_time, max_lon + epsilon, max_lat + epsilon)
+    epsilon = 0.00001
+    min_index = calculate_z_order_index(start_date, min_lon - 0.0001 - epsilon, min_lat - 0.0001 - epsilon, 'min')
+    max_index = calculate_z_order_index(end_date, max_lon + 0.0001 + epsilon, max_lat + 0.0001 + epsilon, 'max')
 
     # Query on Z-order index range and partition key of EventType
     start_time_bench = time.time()
