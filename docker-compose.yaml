@@ -36,8 +36,7 @@ services:
       - REGION=us-east-1
       - DYNAMODB_ENDPOINT=http://dynamodb-local:8000
       - DROP_TABLE_Z_ORDER=${DROP_TABLE_Z_ORDER:-false}
-      - HELLO=${HELLO:-false}
-      - GOODBYE=${GOODBYE:-false}
+      - DROP_TABLE_COMPOSITE_INDEX=${DROP_TABLE_COMPOSITE_INDEX:-false}
     networks:
       - backend
 
