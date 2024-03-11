@@ -14,5 +14,7 @@ fi
 apt-get update
 apt-get install jq sed grep -y
 xargs --version # make sure xargs is installed already in the container
+pip3 install pytz faker # need for running mock event script in container
+
 
 # pip3 install --no-cache-dir -r requirements.txt 
