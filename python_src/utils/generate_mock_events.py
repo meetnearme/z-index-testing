@@ -30,7 +30,7 @@ CITIES = [
     'New York', 'Chicago', 'Los Angeles', 'Houston', 'Phoenix', 'Seattle'
 ]
 
-start_date = datetime(2024, 6, 1)
+start_date = datetime(2099, 1, 1)
 end_date = start_date + timedelta(days=90)
 
 
