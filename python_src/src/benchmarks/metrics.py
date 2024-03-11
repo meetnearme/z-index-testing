@@ -34,9 +34,10 @@ class MetricsCollector:
             os.makedirs(directory)
 
         file_path = os.path.join(directory, file_name)
-        with open(file_path, 'a') as f:
+        with open(file_path, 'a', newline='') as f:
             writer = csv.DictWriter(f, fieldnames=self.metrics[0].keys())
-            writer.writeheader()
+            if os.path.getsize(file_path) == 0:
+                writer.writeheader()
             writer.writerows(self.metrics)
 
 
