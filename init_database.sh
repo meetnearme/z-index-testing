@@ -19,30 +19,69 @@ if [ -f "$seed_complete_file" ]; then
 fi
 
 echo "Start creating database tables"
+
+echo "Creating Z Order Table"
 #
 # Check if drop table flag is passed 
 if [ "$DROP_TABLE_Z_ORDER" = "true" ]; then
-    echo "Dropping the existing Dynamodb Table"
+    echo "Dropping the existing Z Order Dynamodb Table"
     aws dynamodb delete-table --table-name EventsTableZOrder \
         --endpoint-url http://dynamodb-local:8000 \
         --region $AWS_REGION
 fi
 
 # Setup and seeding of ZOrder table
-DB_TABLE_NAME="EventsTableZOrder"
+DB_TABLE_NAME_Z_ORDER="EventsTableZOrder"
 
 if aws dynamodb describe-table \
-    --table-name $DB_TABLE_NAME \
+    --table-name $DB_TABLE_NAME_Z_ORDER \
     --endpoint-url http://dynamodb-local:8000 \
     --region $AWS_REGION 2>/dev/null; then
-    echo "DynamoDB Table: $DB_TABLE_NAME found, Skipping table creation..."
+    echo "DynamoDB Table: $DB_TABLE_NAME_Z_ORDER found, Skipping table creation..."
 else
 # Create Dynamodb table
 aws dynamodb create-table \
-    --table-name $DB_TABLE_NAME \
+    --table-name $DB_TABLE_NAME_Z_ORDER \
     --attribute-definitions \
         AttributeName=EventType,AttributeType=S \
         AttributeName=ZOrderIndex,AttributeType=B \
+    --key-schema \
+        AttributeName=EventType,KeyType=HASH \
+        AttributeName=ZOrderIndex,KeyType=RANGE \
+    --provisioned-throughput \
+        ReadCapacityUnits=5,WriteCapacityUnits=5 \
+    --endpoint-url http://dynamodb-local:8000 \
+    --region $AWS_REGION
+fi
+
+echo "Dynamodb z order table created"
+
+echo "Creating Composite Index Table"
+
+# Setup and seeding of ZOrder table
+DB_TABLE_NAME_COMPOSITE_INDEX="EventsTableCompositeIndex"
+
+# Check if drop table flag is passed 
+if [ "$DROP_TABLE_COMPOSITE_INDEX" = "true" ]; then
+    echo "Dropping the existing Composite index Dynamodb Table"
+    aws dynamodb delete-table --table-name $DB_TABLE_NAME_COMPOSITE_INDEX \
+        --endpoint-url http://dynamodb-local:8000 \
+        --region $AWS_REGION
+fi
+
+
+if aws dynamodb describe-table \
+    --table-name $DB_TABLE_NAME_COMPOSITE_INDEX \
+    --endpoint-url http://dynamodb-local:8000 \
+    --region $AWS_REGION 2>/dev/null; then
+    echo "DynamoDB Table: $DB_TABLE_NAME_COMPOSITE_INDEX found, Skipping table creation..."
+else
+# Create Dynamodb table
+aws dynamodb create-table \
+    --table-name $DB_TABLE_NAME_COMPOSITE_INDEX \
+    --attribute-definitions \
+        AttributeName=EventType,AttributeType=S \
+        AttributeName=ZOrderIndex,AttributeType=S \
     --key-schema \
         AttributeName=EventType,KeyType=HASH \
         AttributeName=ZOrderIndex,KeyType=RANGE \
@@ -61,7 +100,6 @@ python3 -m python_src.scripts.generate_mock_events
 split -l 25 events.json events.json.
 
 # batch write function run in parallel
-echo "Starting batch write to z order table..."
 puts=()
 batch_write() {
     echo "In batch write"
@@ -138,6 +176,7 @@ batch_write() {
          --region $AWS_REGION
 } 
 
+echo "Starting batch write to z order table..."
 # Run batch_write in parallel using xargs
 for file in events.json.*; do 
     batch_write "$file" "$DB_TABLE_NAME" &
