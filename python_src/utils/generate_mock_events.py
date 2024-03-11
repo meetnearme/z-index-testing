@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from faker import Faker
 
 from ..src.indexing.z_order import calculate_z_order_index
+from ..src.indexing.composite import calculate_composite_index
 
 fake = Faker()
 
@@ -62,7 +63,10 @@ def generate_events(num_events, output_file):
             uuid = str(uuid_mod.uuid4())
 
             # Calculate z order index
-            z_order_index = calculate_z_order_index(start, lon, lat, 'actual')
+            z_order_index = calculate_z_order_index(start, lat, lon, 'actual')
+
+            # Calculate composite index 
+            composite_index = calculate_composite_index(start, lat, lon)
 
             event = {
                 'city': city,
