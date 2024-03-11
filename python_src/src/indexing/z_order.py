@@ -1,4 +1,5 @@
 import struct
+from datetime import datetime
 
 def map_float_to_sortable_int(float_value):
     """
@@ -21,6 +22,9 @@ def map_float_to_sortable_int(float_value):
 
 
 def calculate_z_order_index(start_time, lon, lat):
+    # Get current timestamp as index creation time
+    index_creation_time_bin = bin(int(datetime.now().timestamp()))[2:].zfill(32)
+
     # Convert dimensions to binary representations
     start_time_bin = bin(int(start_time.timestamp()))[2:].zfill(32)
 
@@ -32,10 +36,14 @@ def calculate_z_order_index(start_time, lon, lat):
     lon_bin = bin(lon_sortable_int)[2:].zfill(32)
     lat_bin = bin(lat_sortable_int)[2:].zfill(32)
 
+    # Convert the index creation time to binary string
+
     # interleave binary representations
     z_index_bin = ''.join(
             start_time_bin[i:i+1] + lon_bin[i:i+1] + lat_bin[i:i+1]
             for i in range(0, 32, 1)
     )
+
+    z_index_with_creation_time_bin = z_index_bin + index_creation_time_bin
 
     return z_index_bin
