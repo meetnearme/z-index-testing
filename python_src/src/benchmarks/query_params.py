@@ -178,55 +178,55 @@ range_query_params = [
 
 temporal_query_params = [
     {
-        'start_time': '2099-01-01T00:00:00',
-        'end_time': '2099-03-31T23:59:59'
+        'start_time': '2099-01-01T00:00:00Z',
+        'end_time': '2099-03-31T23:59:59Z'
     },  # Full three-month range
     {
-        'start_time': '2099-01-01T00:00:00',
-        'end_time': '2099-01-31T23:59:59'
+        'start_time': '2099-01-01T00:00:00Z',
+        'end_time': '2099-01-31T23:59:59Z'
     },  # Full month of January
     {
-        'start_time': '2099-02-01T00:00:00',
-        'end_time': '2099-02-28T23:59:59'
+        'start_time': '2099-02-01T00:00:00Z',
+        'end_time': '2099-02-28T23:59:59Z'
     },  # Full month of February
     {
-        'start_time': '2099-03-01T00:00:00',
-        'end_time': '2099-03-31T23:59:59'
+        'start_time': '2099-03-01T00:00:00Z',
+        'end_time': '2099-03-31T23:59:59Z'
     },  # Full month of March
     {
-        'start_time': '2099-01-01T00:00:00',
-        'end_time': '2099-01-15T23:59:59'
+        'start_time': '2099-01-01T00:00:00Z',
+        'end_time': '2099-01-15T23:59:59Z'
     },  # First half of January
     {
-        'start_time': '2099-01-16T00:00:00',
-        'end_time': '2099-01-31T23:59:59'
+        'start_time': '2099-01-16T00:00:00Z',
+        'end_time': '2099-01-31T23:59:59Z'
     },  # Second half of January
     {
-        'start_time': '2099-02-01T00:00:00',
-        'end_time': '2099-02-14T23:59:59'
+        'start_time': '2099-02-01T00:00:00Z',
+        'end_time': '2099-02-14T23:59:59Z'
     },  # First half of February
     {
-        'start_time': '2099-02-15T00:00:00',
-        'end_time': '2099-02-28T23:59:59'
+        'start_time': '2099-02-15T00:00:00Z',
+        'end_time': '2099-02-28T23:59:59Z'
     },  # Second half of February
     {
-        'start_time': '2099-03-01T00:00:00',
-        'end_time': '2099-03-15T23:59:59'
+        'start_time': '2099-03-01T00:00:00Z',
+        'end_time': '2099-03-15T23:59:59Z'
     },  # First half of March
     {
-        'start_time': '2099-03-16T00:00:00',
-        'end_time': '2099-03-31T23:59:59'
+        'start_time': '2099-03-16T00:00:00Z',
+        'end_time': '2099-03-31T23:59:59Z'
     },  # Second half of March
     {
-        'start_time': '2099-01-01T00:00:00',
-        'end_time': '2099-01-07T23:59:59'
+        'start_time': '2099-01-01T00:00:00Z',
+        'end_time': '2099-01-07T23:59:59Z'
     },  # First week of January
     {
-        'start_time': '2099-02-01T00:00:00',
-        'end_time': '2099-02-07T23:59:59'
+        'start_time': '2099-02-01T00:00:00Z',
+        'end_time': '2099-02-07T23:59:59Z'
     },  # First week of February
     {
-        'start_time': '2099-03-01T00:00:00',
-        'end_time': '2099-03-07T23:59:59'
+        'start_time': '2099-03-01T00:00:00Z',
+        'end_time': '2099-03-07T23:59:59Z'
     },  # First week of March
 ]
