@@ -1,6 +1,7 @@
 import unittest
 import boto3
 import uuid
+import pytz
 from decimal import Decimal
 from datetime import datetime, timedelta
 from ..src.queries.z_order import query_point, query_range
@@ -18,8 +19,8 @@ db_config = Config(
 
 class TestSpatialQueriesZOrder(unittest.TestCase):
     def setUp(self):
-        self.start_time = datetime(2024, 6, 1, 12, 0, 0)
-        self.end_time = self.start_time + timedelta(hours=3)
+        self.start_time = datetime(2099, 1, 1, tzinfo=pytz.UTC)
+        self.end_time = self.start_time + timedelta(days=90)
         self.dynamodb = boto3.resource(
                 'dynamodb', 
                 endpoint_url="http://localhost:8000",
@@ -31,8 +32,8 @@ class TestSpatialQueriesZOrder(unittest.TestCase):
     def test_query_point_existing_event(self):
         # Test querying for a point location where an event exists
         lon, lat = -73.98517, 40.74921  # Example location in New York
-        min_index = calculate_z_order_index(self.start_time, lon - 0.5, lat - 0.5)
-        max_index = calculate_z_order_index(self.start_time, lon + 0.5, lat + 0.5)
+        min_index = calculate_z_order_index(self.start_time, lon - 0.5, lat - 0.5, 'min')
+        max_index = calculate_z_order_index(self.end_time, lon + 0.5, lat + 0.5, 'max')
 
         duration = 3
         end = self.start_time + timedelta(hours=duration)
@@ -42,7 +43,7 @@ class TestSpatialQueriesZOrder(unittest.TestCase):
         lat_dec = Decimal(str(lat))
 
         event_uuid = str(uuid.uuid4())
-        z_order_index = calculate_z_order_index(self.start_time, lon, lat)
+        z_order_index = calculate_z_order_index(self.start_time, lon, lat, 'actual')
         self.table.put_item(
             Item={
                 'EventType': 'MeetNearMeEvent',
@@ -64,7 +65,7 @@ class TestSpatialQueriesZOrder(unittest.TestCase):
 
         print("Inserted Item", inserted_item)
 
-        events, _ = query_point(lon, lat)
+        events, _ = query_point(lon, lat, self.start_time, self.end_time)
         min_index_bin = min_index.encode()
         max_index_bin = max_index.encode()
 
@@ -76,7 +77,7 @@ class TestSpatialQueriesZOrder(unittest.TestCase):
     def test_query_point_no_event(self):
         # Test querying for a point location where no event exists
         lon, lat = -90.0, 45.0  # Example location with no events
-        events, _ = query_point(lon, lat)
+        events, _ = query_point(lon, lat, self.start_time, self.end_time)
         self.assertEqual(len(events), 0)
 
     # Test cases for query_range
@@ -84,11 +85,11 @@ class TestSpatialQueriesZOrder(unittest.TestCase):
         # Test querying for a bounding box where events exist
         min_lat, max_lat = 40.5, 41.2
         min_lon, max_lon = -74.5, -73.5  # Example bounding box around New York
-        min_index = calculate_z_order_index(self.start_time, min_lon, min_lat)
-        max_index = calculate_z_order_index(self.start_time, max_lon, max_lat)
+        min_index = calculate_z_order_index(self.start_time, min_lon, min_lat, 'min')
+        max_index = calculate_z_order_index(self.start_time, max_lon, max_lat, 'max')
         min_index_bin = boto3.dynamodb.types.Binary(min_index.encode())
         max_index_bin = boto3.dynamodb.types.Binary(max_index.encode())
-        events, _ = query_range(min_lat, max_lat, min_lon, max_lon)
+        events, _ = query_range(min_lat, max_lat, min_lon, max_lon, self.start_time, self.end_time)
         self.assertGreater(len(events), 0)
         for event in events:
             min_index_int = int.from_bytes(min_index_bin, byteorder='big')
@@ -100,7 +101,7 @@ class TestSpatialQueriesZOrder(unittest.TestCase):
         # Test querying for a bounding box where no events exist
         min_lat, max_lat = 35.0, 36.0
         min_lon, max_lon =  -90.0, -89.0,  # Example bounding box with no events
-        events, _ = query_range(min_lat, max_lat, min_lon, max_lon)
+        events, _ = query_range(min_lat, max_lat, min_lon, max_lon, self.start_time, self.end_time)
         self.assertEqual(len(events), 0)
 
     def tearDown(self):
