@@ -21,7 +21,7 @@ fi
 echo "Start creating database tables"
 #
 # Check if drop table flag is passed 
-if [ "$DROP_TABLE" = "true" ]; then
+if [ "$DROP_TABLE_Z_ORDER" = "true" ]; then
     echo "Dropping the existing Dynamodb Table"
     aws dynamodb delete-table --table-name EventsTableZOrder \
         --endpoint-url http://dynamodb-local:8000 \
