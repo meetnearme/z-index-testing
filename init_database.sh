@@ -21,17 +21,18 @@ fi
 echo "Start creating database tables"
 
 echo "Creating Z Order Table"
-#
+
+# Setup and seeding of ZOrder table
+DB_TABLE_NAME_Z_ORDER="EventsTableZOrder"
+
 # Check if drop table flag is passed 
 if [ "$DROP_TABLE_Z_ORDER" = "true" ]; then
     echo "Dropping the existing Z Order Dynamodb Table"
-    aws dynamodb delete-table --table-name EventsTableZOrder \
+    aws dynamodb delete-table --table-name $DB_TABLE_NAME_Z_ORDER \
         --endpoint-url http://dynamodb-local:8000 \
         --region $AWS_REGION
 fi
 
-# Setup and seeding of ZOrder table
-DB_TABLE_NAME_Z_ORDER="EventsTableZOrder"
 
 if aws dynamodb describe-table \
     --table-name $DB_TABLE_NAME_Z_ORDER \
@@ -81,10 +82,10 @@ aws dynamodb create-table \
     --table-name $DB_TABLE_NAME_COMPOSITE_INDEX \
     --attribute-definitions \
         AttributeName=EventType,AttributeType=S \
-        AttributeName=ZOrderIndex,AttributeType=S \
+        AttributeName=CompositeIndex,AttributeType=B \
     --key-schema \
         AttributeName=EventType,KeyType=HASH \
-        AttributeName=ZOrderIndex,KeyType=RANGE \
+        AttributeName=CompositeIndex,KeyType=RANGE \
     --provisioned-throughput \
         ReadCapacityUnits=5,WriteCapacityUnits=5 \
     --endpoint-url http://dynamodb-local:8000 \
@@ -127,9 +128,10 @@ batch_write() {
        lat=$(echo "$item" | jq -r '.lat')
        uuid=$(echo "$item" | jq -r '.uuid')
        z_order_index=$(echo "$item" | jq -r '.z_order_index')
+       composite_index=$(echo "$item" | jq -r '.composite_index')
 
        # construct the PutRequest for each item
-       put_request=$(jq -n --arg event_type "MeetNearMeEvent" \
+       put_request="$(jq -n --arg event_type "MeetNearMeEvent" \
            --arg city "$city" \
            --arg name "$name" \
            --arg description "$description" \
@@ -139,11 +141,13 @@ batch_write() {
            --arg lat "$lat" \
            --arg uuid "$uuid" \
            --arg z_order_index "$z_order_index" \
+           --arg composite_index "$composite_index" \
            '{
                "PutRequest": {
                    "Item": {
                         "EventType": {"S": $event_type},
                         "ZOrderIndex": {"B": ($z_order_index|@base64)},
+                        "CompositeIndex": {"B": ($composite_index|@base64)},
                         "Name": {"S": $name},
                         "City": {"S": $city},
                         "Description": {"S": $description},
@@ -154,7 +158,7 @@ batch_write() {
                         "UUID": {"S": $uuid}
                    }
                }
-           }')
+           }')"
         
         put_request_obj=$(jq --null-input "$put_request")
 
@@ -179,8 +183,15 @@ batch_write() {
 echo "Starting batch write to z order table..."
 # Run batch_write in parallel using xargs
 for file in events.json.*; do 
-    batch_write "$file" "$DB_TABLE_NAME" &
+    batch_write "$file" "$DB_TABLE_NAME_Z_ORDER" &
 done
+echo "Finished batch write to z order table..."
+
+echo "Start batch write to composite index table.."
+for file in events.json.*; do 
+    batch_write "$file" "$DB_TABLE_NAME_COMPOSITE_INDEX" &
+done
+echo "Finish batch write to composite index table..."
 # file=events.json.aa
 # batch_write "$file"
 
@@ -192,8 +203,14 @@ echo "Finished batch writes to z order table"
 
 
 echo "Now scanning db"
-aws dynamodb scan --table-name $DB_TABLE_NAME --endpoint-url http://dynamodb-local:8000 --select "COUNT" --region $AWS_REGION
-aws dynamodb scan --table-name $DB_TABLE_NAME --endpoint-url http://dynamodb-local:8000 --region $AWS_REGION
+
+echo "Scanning Z Order Table"
+aws dynamodb scan --table-name $DB_TABLE_NAME_Z_ORDER --endpoint-url http://dynamodb-local:8000 --select "COUNT" --region $AWS_REGION
+# aws dynamodb scan --table-name $DB_TABLE_NAME_Z_ORDER --endpoint-url http://dynamodb-local:8000 --region $AWS_REGION
+
+echo "Scanning Composite Index Table"
+aws dynamodb scan --table-name $DB_TABLE_NAME_COMPOSITE_INDEX --endpoint-url http://dynamodb-local:8000 --select "COUNT" --region $AWS_REGION
+# aws dynamodb scan --table-name $DB_TABLE_NAME_COMPOSITE_INDEX --endpoint-url http://dynamodb-local:8000 --region $AWS_REGION
 
 
 echo "Database seed complete "
